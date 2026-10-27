@@ -1,0 +1,22 @@
+__pycache__
+app.egg-info
+
+.DS_Store
+
+.vscode
+.mypy_cache
+docker-stack.yml
+*.txt
+*.code-workspace
+.s3cfg
+
+node_modules
+venv
+
+.idea
+frontend/next-env.d.ts
+frontend/.env.local
+.env
+cookiecutter-config-file.yml
+# docker-compose.yml
+docker-compose.override.yml
