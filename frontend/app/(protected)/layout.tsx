@@ -9,5 +9,6 @@ interface ProtectedLayoutProps {
 export default function ProtectedLayout({
   children,
 }: ProtectedLayoutProps) {
+  console.log("Protected layout rendered");
   return <AuthGuard>{children}</AuthGuard>;
 }

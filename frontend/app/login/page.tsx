@@ -21,7 +21,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/dashboard");
+      router.replace("/");
     }
   }, [isAuthenticated, router]);
 
@@ -34,7 +34,7 @@ export default function LoginPage() {
       const result = await login({ email: email.trim(), password });
 
       setAuth(result.user, result.accessToken);
-      router.replace("/dashboard");
+      router.replace("/");
     } catch (err) {
       setError(
         err instanceof Error

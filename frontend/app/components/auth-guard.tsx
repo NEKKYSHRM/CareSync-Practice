@@ -15,7 +15,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const isAuthenticated = useAuthStore(
     (state) => state.isAuthenticated,
   );
-  const isLoading = useAuthStore((state) => state.isLoading);
+  const isLoading = useAuthStore(
+    (state) => state.isLoading,
+  );
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

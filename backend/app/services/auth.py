@@ -1,3 +1,5 @@
+import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
 
 from jose import jwt
@@ -32,13 +34,16 @@ def create_access_token(
     now = datetime.now(timezone.utc)
     expire = now + (
         expires_delta
-        or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        or timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
     )
 
     payload = {
         "sub": subject,
         "iat": now,
         "exp": expire,
+        "type": "access",
     }
 
     return jwt.encode(
@@ -46,6 +51,18 @@ def create_access_token(
         settings.JWT_SECRET_KEY,
         algorithm=settings.JWT_ALGORITHM,
     )
+
+
+def create_refresh_token() -> str:
+    """Generate a cryptographically secure opaque refresh token."""
+    return secrets.token_urlsafe(64)
+
+
+def hash_refresh_token(refresh_token: str) -> str:
+    """Hash a high-entropy refresh token before database storage."""
+    return hashlib.sha256(
+        refresh_token.encode("utf-8")
+    ).hexdigest()
 
 
 async def authenticate_user(
