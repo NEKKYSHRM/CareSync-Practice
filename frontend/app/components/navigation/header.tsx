@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Bell, Mail, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/app/store/auth-store";
 import Link from "next/link";
+import {
+  Search,
+  Bell,
+  Mail,
+  ChevronDown,
+} from "lucide-react";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -41,7 +46,10 @@ export default function Header() {
 
     updateGreeting();
 
-    const intervalId = window.setInterval(updateGreeting, 60_000);
+    const intervalId = window.setInterval(
+      updateGreeting,
+      60_000,
+    );
 
     return () => window.clearInterval(intervalId);
   }, []);
@@ -52,7 +60,7 @@ export default function Header() {
   const isDoctor = user?.role === "doctor";
 
   return (
-    <header className="sticky top-0 z-30 flex h-19 items-center justify-between gap-4 border-b border-[#DCEBE9] bg-white px-5 sm:px-8">
+    <header className="sticky top-0 z-30 flex h-[76px] items-center justify-between gap-3 border-b border-[#DCEBE9] bg-white px-3 sm:gap-4 sm:px-5 lg:px-6">
       {/* Greeting */}
       <div className="min-w-0">
         <h1 className="truncate text-base font-semibold text-[#003B3B] sm:text-lg">
@@ -89,9 +97,9 @@ export default function Header() {
           aria-label="Notifications, 3 unread"
           className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#D5E7E4] text-[#285653] transition hover:bg-[#F0F9F8]"
         >
-          <Bell className="h-4.75 w-4.75" />
+          <Bell className="h-[19px] w-[19px]" />
 
-          <span className="absolute -right-0.5 -top-0.5 flex h-4.25 min-w-4.25 items-center justify-center rounded-full bg-[#00A995] px-1 text-[10px] font-semibold text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#00A995] px-1 text-[10px] font-semibold text-white">
             3
           </span>
         </button>
@@ -102,9 +110,9 @@ export default function Header() {
           aria-label="Messages, 5 unread"
           className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#D5E7E4] text-[#285653] transition hover:bg-[#F0F9F8]"
         >
-          <Mail className="h-4.75 w-4.75" />
+          <Mail className="h-[19px] w-[19px]" />
 
-          <span className="absolute -right-0.5 -top-0.5 flex h-4.25 min-w-4.25 items-center justify-center rounded-full bg-[#00A995] px-1 text-[10px] font-semibold text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#00A995] px-1 text-[10px] font-semibold text-white">
             5
           </span>
         </button>
@@ -126,7 +134,9 @@ export default function Header() {
             </p>
 
             <p className="text-[10px] text-[#66817F]">
-              {user?.role ? formatRole(user.role) : "Loading profile"}
+              {user?.role
+                ? formatRole(user.role)
+                : "Loading profile"}
             </p>
           </div>
 

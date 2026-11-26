@@ -277,16 +277,14 @@ export default function PatientsPage() {
     }
   }
 
+  const MIN_TABLE_ROWS = 10;
+  const TABLE_ROW_HEIGHT = 44; // pixels
+
   return (
     <div className="min-h-full bg-[#f4f8f8] px-5 py-7 text-slate-800 sm:px-7 lg:px-9">
       {/* Page heading */}
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <div className="mb-1 flex items-center gap-2 text-sm text-slate-500">
-            <span>Practice</span>
-            <span>/</span>
-            <span className="text-[#008577]">Patients</span>
-          </div>
 
           <h1 className="text-2xl font-bold tracking-tight text-[#063f3c] sm:text-3xl">
             Patients
@@ -342,314 +340,326 @@ export default function PatientsPage() {
         </div>
       )}
 
-      {/* Patient directory */}
-      <section className="overflow-hidden rounded-2xl border border-[#dce9e8] bg-white shadow-sm">
-        <div className="flex flex-col justify-between gap-4 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:px-6">
-          <div>
-            <h2 className="text-lg font-bold text-[#073f3c]">
-              Patient Directory
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Search and manage registered patients.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => void loadPatients()}
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-2 self-start rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 sm:self-auto"
-          >
-            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-            Refresh
-          </button>
-        </div>
-
-        {/* Search and filters */}
-        <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:px-6">
-          <div className="relative flex-1">
-            <Search
-              size={18}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by name, patient ID, mobile or email..."
-              className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-[#008577] focus:ring-4 focus:ring-teal-50"
-            />
-          </div>
-
-          <div className="relative sm:w-48">
-            <Filter
-              size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-              className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-9 pr-9 text-sm outline-none focus:border-[#008577] focus:ring-4 focus:ring-teal-50"
+      <div className="flex flex-col gap-5">
+        <section className="overflow-hidden rounded-2xl border border-[#dce9e8] bg-white shadow-sm">
+          {/* Patient toolbar: Refresh left, search and filter right */}
+          <div className="flex flex-col gap-3 border-b border-slate-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+            {/* Left: Refresh */}
+            <button
+              type="button"
+              onClick={() => void loadPatients()}
+              disabled={loading}
+              className="inline-flex h-10 shrink-0 items-center justify-center gap-2 self-start rounded-lg border border-slate-200 px-4 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="all">All patients</option>
-              <option value="active">Active only</option>
-              <option value="inactive">Inactive only</option>
-            </select>
-            <ChevronDown
-              size={15}
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-          </div>
-        </div>
+              <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+              Refresh
+            </button>
 
-        {/* Results count */}
-        <div className="flex items-center justify-between px-5 py-3 text-xs text-slate-500 sm:px-6">
-          <span>
-            Showing{" "}
-            <strong className="font-semibold text-slate-700">
-              {filteredPatients.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}
-              {"–"}
-              {Math.min(page * PAGE_SIZE, filteredPatients.length)}
-            </strong>{" "}
-            of{" "}
-            <strong className="font-semibold text-slate-700">
-              {filteredPatients.length}
-            </strong>{" "}
-            patients
-          </span>
+            {/* Right: Search and status filter */}
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+              {/* Search */}
+              <div className="relative min-w-0 flex-1 sm:max-w-md">
+                <Search
+                  size={18}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                />
 
-          <span className="hidden items-center gap-1.5 sm:inline-flex">
-            <span className="h-2 w-2 rounded-full bg-[#008577]" />
-            Live directory
-          </span>
-        </div>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search by name, patient ID, mobile or email..."
+                  aria-label="Search patients"
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-[#008577] focus:ring-2 focus:ring-teal-50"
+                />
+              </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px] border-collapse text-left">
-            <thead>
-              <tr className="bg-[#f7faf9] text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <th className="px-6 py-4">Patient</th>
-                <th className="px-5 py-4">Contact</th>
-                <th className="px-5 py-4">Date of Birth</th>
-                <th className="px-5 py-4">Gender</th>
-                <th className="px-5 py-4">Status</th>
-                <th className="px-5 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
+              {/* Filter */}
+              <div className="relative w-36 shrink-0 sm:w-44">
+                <Filter
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
 
-            <tbody className="divide-y divide-slate-100">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-20 text-center">
-                    <LoaderCircle
-                      size={28}
-                      className="mx-auto animate-spin text-[#008577]"
-                    />
-                    <p className="mt-3 text-sm text-slate-500">
-                      Loading patients...
-                    </p>
-                  </td>
-                </tr>
-              ) : visiblePatients.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50 text-[#008577]">
-                      <Users size={26} />
-                    </div>
-                    <h3 className="mt-4 font-semibold text-slate-800">
-                      {search || statusFilter !== "all"
-                        ? "No matching patients"
-                        : "No patients registered yet"}
-                    </h3>
-                    <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
-                      {search || statusFilter !== "all"
-                        ? "Try changing your search or filters."
-                        : "Register your first patient to start building your clinic directory."}
-                    </p>
-                    {!search && statusFilter === "all" && (
-                      <button
-                        type="button"
-                        onClick={openRegistration}
-                        className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#008577] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#006f65]"
-                      >
-                        <UserPlus size={16} />
-                        Register first patient
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ) : (
-                visiblePatients.map((patient) => {
-                  const patientId = patient.header_section.patient_id;
-                  const isSelected = selectedPatient === patientId;
+                <select
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                  aria-label="Filter patients by status"
+                  className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-8 text-sm outline-none transition focus:border-[#008577] focus:ring-2 focus:ring-teal-50"
+                >
+                  <option value="all">All patients</option>
+                  <option value="active">Active only</option>
+                  <option value="inactive">Inactive only</option>
+                </select>
 
-                  return (
-                    <tr
-                      key={patientId}
-                      className="transition hover:bg-[#f8fbfa]"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e2f5f1] text-sm font-bold text-[#00786c]">
-                            {getInitials(patient) || "P"}
-                          </div>
-
-                          <div className="min-w-0">
-                            <p className="max-w-56 truncate text-sm font-semibold text-slate-800">
-                              {getPatientName(patient)}
-                            </p>
-                            <p className="mt-1 text-xs text-slate-500">
-                              {patientId}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="flex flex-col gap-1.5">
-                          <span className="inline-flex items-center gap-1.5 text-sm text-slate-700">
-                            <Phone
-                              size={13}
-                              className="shrink-0 text-slate-400"
-                            />
-                            {patient.mobile_number || "Not provided"}
-                          </span>
-
-                          <span className="inline-flex max-w-48 items-center gap-1.5 truncate text-xs text-slate-500">
-                            <Mail
-                              size={13}
-                              className="shrink-0 text-slate-400"
-                            />
-                            <span className="truncate">
-                              {patient.email || "No email"}
-                            </span>
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center gap-2 text-sm text-slate-600">
-                          <CalendarDays size={15} className="text-slate-400" />
-                          {formatDate(patient.dob)}
-                        </span>
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <span className="text-sm text-slate-600">
-                          {{
-                            M: "Male",
-                            F: "Female",
-                            O: "Other",
-                            NA: "N/A",
-                          }[patient.gender] ?? "N/A"}
-                        </span>
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            patient.active
-                              ? "bg-emerald-50 text-emerald-700"
-                              : "bg-slate-100 text-slate-600"
-                          }`}
-                        >
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              patient.active ? "bg-emerald-500" : "bg-slate-400"
-                            }`}
-                          />
-                          {patient.active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-
-                      <td className="px-5 py-4 text-right">
-                        <div className="relative inline-block">
-                          <button
-                            type="button"
-                            aria-label={`Actions for ${getPatientName(patient)}`}
-                            aria-expanded={isSelected}
-                            onClick={() =>
-                              setSelectedPatient(isSelected ? null : patientId)
-                            }
-                            className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
-                          >
-                            <MoreHorizontal size={19} />
-                          </button>
-
-                          {isSelected && (
-                            <div className="absolute right-0 top-10 z-20 w-48 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedPatient(null);
-                                  setSuccess(`Patient ID: ${patientId}`);
-                                }}
-                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
-                              >
-                                <ClipboardList size={15} />
-                                Show patient ID
-                              </button>
-
-                              <button
-                                type="button"
-                                disabled={deletingId === patientId}
-                                onClick={() => void handleDelete(patient)}
-                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
-                              >
-                                {deletingId === patientId ? (
-                                  <LoaderCircle
-                                    size={15}
-                                    className="animate-spin"
-                                  />
-                                ) : (
-                                  <Trash2 size={15} />
-                                )}
-                                Delete patient
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {!loading && filteredPatients.length > 0 && (
-          <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <p className="text-sm text-slate-500">
-              Page {page} of {totalPages}
-            </p>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => setPage((current) => current - 1)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <ArrowLeft size={15} />
-                Previous
-              </button>
-
-              <button
-                type="button"
-                disabled={page >= totalPages}
-                onClick={() => setPage((current) => current + 1)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Next
-                <ArrowRight size={15} />
-              </button>
+                <ChevronDown
+                  size={15}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+              </div>
             </div>
           </div>
-        )}
-      </section>
+        </section>
+
+        <section className="overflow-hidden rounded-xl border border-[#dce9e8] bg-white shadow-sm">
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[850px] border-collapse text-left">
+              <thead>
+                <tr className="bg-[#f7faf9] text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="px-5 py-3 text-left">Patient ID</th>
+                  <th className="px-5 py-3 text-left">Patient</th>
+                  <th className="px-5 py-4">Contact</th>
+                  <th className="px-5 py-4">Date of Birth</th>
+                  <th className="px-5 py-4">Gender</th>
+                  <th className="px-5 py-4">Status</th>
+                  <th className="px-5 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody
+                className="divide-y divide-slate-100"
+                style={{ height: `${MIN_TABLE_ROWS * TABLE_ROW_HEIGHT}px` }}
+              >
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="py-20 text-center">
+                      <LoaderCircle
+                        size={28}
+                        className="mx-auto animate-spin text-[#008577]"
+                      />
+                      <p className="mt-3 text-sm text-slate-500">
+                        Loading patients...
+                      </p>
+                    </td>
+                  </tr>
+                ) : visiblePatients.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-20 text-center">
+                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50 text-[#008577]">
+                        <Users size={26} />
+                      </div>
+                      <h3 className="mt-4 font-semibold text-slate-800">
+                        {search || statusFilter !== "all"
+                          ? "No matching patients"
+                          : "No patients registered yet"}
+                      </h3>
+                      <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
+                        {search || statusFilter !== "all"
+                          ? "Try changing your search or filters."
+                          : "Register your first patient to start building your clinic directory."}
+                      </p>
+                      {!search && statusFilter === "all" && (
+                        <button
+                          type="button"
+                          onClick={openRegistration}
+                          className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#008577] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#006f65]"
+                        >
+                          <UserPlus size={16} />
+                          Register first patient
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ) : (
+                  visiblePatients.map((patient) => {
+                    const patientId = patient.header_section.patient_id;
+                    const isSelected = selectedPatient === patientId;
+
+                    return (
+                      <tr
+                        key={patientId}
+                        className="transition hover:bg-[#f8fbfa]"
+                      >
+                        <td className="px-5 py-1">
+                          <span className="whitespace-nowrap font-mono text-xs text-slate-600">
+                            {patientId}
+                          </span>
+                        </td>
+
+                        <td className="px-5 py-1">
+                          <div className="flex items-center gap-3">
+                            <div className="min-w-0">
+                              <p className="max-w-56 truncate text-xs font-semibold text-slate-800">
+                                {getPatientName(patient)}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-5 py-1">
+                          <div className="flex flex-col gap-1.5">
+                            <span className="inline-flex items-center gap-1.5 text-xs text-slate-700">
+                              <Phone
+                                size={13}
+                                className="shrink-0 text-slate-400"
+                              />
+                              {patient.mobile_number || "Not provided"}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td className="px-5 py-1">
+                          <span className="inline-flex items-center gap-2 text-xs text-slate-600">
+                            <CalendarDays
+                              size={15}
+                              className="text-slate-400"
+                            />
+                            {formatDate(patient.dob)}
+                          </span>
+                        </td>
+
+                        <td className="px-5 py-1">
+                          <span className="text-xs text-slate-600">
+                            {{
+                              M: "Male",
+                              F: "Female",
+                              O: "Other",
+                              NA: "N/A",
+                            }[patient.gender] ?? "N/A"}
+                          </span>
+                        </td>
+
+                        <td className="px-5 py-1">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                              patient.active
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                patient.active
+                                  ? "bg-emerald-500"
+                                  : "bg-slate-400"
+                              }`}
+                            />
+                            {patient.active ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+
+                        <td className="px-5 py-1 text-right">
+                          <div className="relative inline-block">
+                            <button
+                              type="button"
+                              aria-label={`Actions for ${getPatientName(patient)}`}
+                              aria-expanded={isSelected}
+                              onClick={() =>
+                                setSelectedPatient(
+                                  isSelected ? null : patientId,
+                                )
+                              }
+                              className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                            >
+                              <MoreHorizontal size={19} />
+                            </button>
+
+                            {isSelected && (
+                              <div className="absolute right-0 top-10 z-20 w-48 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedPatient(null);
+                                    setSuccess(`Patient ID: ${patientId}`);
+                                  }}
+                                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+                                >
+                                  <ClipboardList size={15} />
+                                  Show patient ID
+                                </button>
+
+                                <button
+                                  type="button"
+                                  disabled={deletingId === patientId}
+                                  onClick={() => void handleDelete(patient)}
+                                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                >
+                                  {deletingId === patientId ? (
+                                    <LoaderCircle
+                                      size={15}
+                                      className="animate-spin"
+                                    />
+                                  ) : (
+                                    <Trash2 size={15} />
+                                  )}
+                                  Delete patient
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+                {!loading &&
+                  visiblePatients.length > 0 &&
+                  Array.from({
+                    length: Math.max(
+                      0,
+                      MIN_TABLE_ROWS - visiblePatients.length,
+                    ),
+                  }).map((_, index) => (
+                    <tr key={`placeholder-${index}`} className="h-11">
+                      <td colSpan={7} className="px-5 py-1">
+                        {" "}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {!loading && filteredPatients.length > 0 && (
+            <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-2 sm:flex-row sm:items-center sm:justify-between sm:px-6 bg-[#f7faf9] text-slate-500">
+              {/* Left: Page information */}
+              <p className="text-sm text-slate-500">
+                Page {page} of {totalPages}
+              </p>
+
+              {/* Center: Results count */}
+              <p className="text-xs text-slate-500">
+                Showing{" "}
+                <strong className="font-semibold text-slate-700">
+                  {(page - 1) * PAGE_SIZE + 1}
+                  {"–"}
+                  {Math.min(page * PAGE_SIZE, filteredPatients.length)}
+                </strong>{" "}
+                of{" "}
+                <strong className="font-semibold text-slate-700">
+                  {filteredPatients.length}
+                </strong>{" "}
+                patients
+              </p>
+
+              {/* Right: Previous / Next */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((current) => current - 1)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <ArrowLeft size={15} />
+                  Previous
+                </button>
+
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((current) => current + 1)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Next
+                  <ArrowRight size={15} />
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
 
       {/* Registration modal */}
       {showRegistration && (
