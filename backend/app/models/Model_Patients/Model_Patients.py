@@ -31,7 +31,7 @@ class CurrentStatus(EmbeddedModel):
 
 class HeaderSection(EmbeddedModel):
     patient_id: str = Field(
-        default_factory=lambda: f"PAT-{secrets.randbelow(10**10):010d}"
+        default_factory=lambda: f"PAT{secrets.randbelow(10**10):010d}"
     )
 
     date_created: DateTimeInfo = Field(

@@ -37,23 +37,22 @@ export default function DashboardPage() {
 
     try {
       const allPatients: Patient[] = [];
-      let skip = 0;
 
-      while (true) {
-        const patients = await patientApi.list({
-          skip,
-          limit: PAGE_SIZE,
-          active_only: false,
+      let page = 1;
+      let totalPages = 1;
+
+      do {
+        const result = await patientApi.list({
+          page,
+          page_size: PAGE_SIZE,
+          active: null,
         });
 
-        allPatients.push(...patients);
+        allPatients.push(...result.items);
 
-        if (patients.length < PAGE_SIZE) {
-          break;
-        }
-
-        skip += PAGE_SIZE;
-      }
+        totalPages = result.total_pages;
+        page += 1;
+      } while (page <= totalPages);
 
       const active = allPatients.filter(
         (patient) => patient.active,
@@ -65,8 +64,14 @@ export default function DashboardPage() {
         inactive: allPatients.length - active,
       });
     } catch (err) {
-      console.error("Failed to load dashboard patient statistics:", err);
-      setError("Unable to load patient statistics. Please try again.");
+      console.error(
+        "Failed to load dashboard patient statistics:",
+        err,
+      );
+
+      setError(
+        "Unable to load patient statistics. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -106,7 +111,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-full bg-[#F0F9F8] p-3 sm:p-4 lg:p-5">
       <div className="mx-auto max-w-[1600px] space-y-5">
-        {/* Compact page header */}
+        {/* Page header */}
         <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-xl font-bold tracking-tight text-[#003B3B] sm:text-2xl">
@@ -146,7 +151,8 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => void loadPatientStats()}
-              className="self-start text-xs font-semibold text-red-700 underline underline-offset-4 sm:self-auto sm:text-sm"
+              disabled={loading}
+              className="self-start text-xs font-semibold text-red-700 underline underline-offset-4 disabled:opacity-60 sm:self-auto sm:text-sm"
             >
               Try again
             </button>
@@ -188,7 +194,10 @@ export default function DashboardPage() {
                   <div
                     className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${card.iconBg}`}
                   >
-                    <Icon size={20} className={card.iconColor} />
+                    <Icon
+                      size={20}
+                      className={card.iconColor}
+                    />
                   </div>
                 </div>
               </article>

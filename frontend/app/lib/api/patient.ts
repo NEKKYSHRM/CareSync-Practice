@@ -1,19 +1,19 @@
-
 import type {
   Patient,
   CreatePatientPayload,
   UpdatePatientPayload,
   PatientListParams,
+  PaginatedResponse,
 } from "@/app/types/lookup/patient";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 function getPatientsUrl(): string {
   if (!API_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL is not configured.");
+    throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured.");
   }
 
-  return `${API_BASE_URL.replace(/\/$/, "")}/patients`;
+  return `${API_BASE_URL.replace(/\/+$/, "")}/patients`;
 }
 
 async function request<T>(
@@ -34,7 +34,14 @@ async function request<T>(
 
     try {
       const errorData = await response.json();
-      message = errorData.detail ?? message;
+      const detail = errorData?.detail;
+
+      message =
+        typeof detail === "string"
+          ? detail
+          : detail
+            ? JSON.stringify(detail)
+            : message;
     } catch {
       // Keep the default error message.
     }
@@ -51,37 +58,51 @@ async function request<T>(
 
 export const patientApi = {
   create: (payload: CreatePatientPayload): Promise<Patient> =>
-    request<Patient>(getPatientsUrl(), {
+    request<Patient>(`${getPatientsUrl()}/register`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
 
-  list: (params: PatientListParams = {}): Promise<Patient[]> => {
+  list: (
+    params: PatientListParams = {},
+  ): Promise<PaginatedResponse<Patient>> => {
     const searchParams = new URLSearchParams();
 
-    if (params.skip !== undefined) {
-      searchParams.set("skip", String(params.skip));
+    searchParams.set("page", String(params.page ?? 1));
+    searchParams.set("page_size", String(params.page_size ?? 10));
+
+    if (params.patient_id?.trim()) {
+      searchParams.set("patient_id", params.patient_id.trim());
     }
 
-    if (params.limit !== undefined) {
-      searchParams.set("limit", String(params.limit));
+    if (params.name?.trim()) {
+      searchParams.set("name", params.name.trim());
     }
 
-    if (params.active_only !== undefined) {
-      searchParams.set("active_only", String(params.active_only));
+    if (params.gender) {
+      searchParams.set("gender", params.gender);
     }
 
-    const query = searchParams.toString();
-    const url = query
-      ? `${getPatientsUrl()}?${query}`
-      : getPatientsUrl();
+    if (params.blood_group?.trim()) {
+      searchParams.set("blood_group", params.blood_group.trim());
+    }
 
-    return request<Patient[]>(url);
+    if (params.active !== undefined && params.active !== null) {
+      searchParams.set("active", String(params.active));
+    }
+
+    if (params.created_order) {
+      searchParams.set("created_order", params.created_order);
+    }
+
+    return request<PaginatedResponse<Patient>>(
+      `${getPatientsUrl()}/list?${searchParams.toString()}`,
+    );
   },
 
   getById: (patientId: string): Promise<Patient> =>
     request<Patient>(
-      `${getPatientsUrl()}/${encodeURIComponent(patientId)}`,
+      `${getPatientsUrl()}/detail/${encodeURIComponent(patientId)}`,
     ),
 
   update: (
@@ -89,7 +110,7 @@ export const patientApi = {
     payload: UpdatePatientPayload,
   ): Promise<Patient> =>
     request<Patient>(
-      `${getPatientsUrl()}/${encodeURIComponent(patientId)}`,
+      `${getPatientsUrl()}/update/${encodeURIComponent(patientId)}`,
       {
         method: "PATCH",
         body: JSON.stringify(payload),
@@ -98,7 +119,7 @@ export const patientApi = {
 
   delete: (patientId: string): Promise<void> =>
     request<void>(
-      `${getPatientsUrl()}/${encodeURIComponent(patientId)}`,
+      `${getPatientsUrl()}/delete/${encodeURIComponent(patientId)}`,
       {
         method: "DELETE",
       },

@@ -1,6 +1,16 @@
 
 export type PatientGender = "M" | "F" | "O" | "NA";
 
+export type BloodGroup =
+  | "A+"
+  | "A-"
+  | "B+"
+  | "B-"
+  | "AB+"
+  | "AB-"
+  | "O+"
+  | "O-";
+
 export interface PatientName {
   first_name: string;
   middle_name?: string | null;
@@ -16,6 +26,7 @@ export interface PatientAddress {
 
 export interface DateTimeInfo {
   date: string;
+  time?: string;
 }
 
 export interface StatusHistory {
@@ -69,8 +80,23 @@ export interface UpdatePatientPayload {
   active?: boolean;
 }
 
-export interface PatientListParams {
-  skip?: number;
-  limit?: number;
-  active_only?: boolean;
+export type PatientListParams = {
+  page?: number;
+  page_size?: 5 | 10 | 25 | 50 | 100;
+  patient_id?: string;
+  name?: string;
+  gender?: PatientGender;
+  blood_group?: string;
+  active?: boolean | null;
+  created_order?: "asc" | "desc";
+};
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  page: number;
+  page_size: number;
+  total_items: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
 }

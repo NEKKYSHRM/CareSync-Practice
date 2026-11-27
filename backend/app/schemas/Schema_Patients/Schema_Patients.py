@@ -44,7 +44,7 @@ class CurrentStatusSchema(BaseModel):
 
 
 class HeaderSectionSchema(BaseModel):
-    patient_id: str = Field(pattern=r"^PAT-\d{10}$")
+    patient_id: str = Field(pattern=r"^PAT\d{10}$")
 
     date_created: DateTimeInfoSchema = Field(
         default_factory=lambda: DateTimeInfoSchema(

@@ -32,8 +32,10 @@ import type {
   Patient,
   PatientGender,
 } from "@/app/types/lookup/patient";
+import DataPagination from "@/app/components/ui/table-pagination";
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 
 const EMPTY_FORM = {
   first_name: "",
@@ -97,9 +99,11 @@ export default function PatientsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
 
   const [showRegistration, setShowRegistration] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
+  const [pageSizeOpen, setPageSizeOpen] = useState(false);
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState("");
@@ -110,15 +114,16 @@ export default function PatientsPage() {
     setError("");
 
     try {
-      // Load all patients so the directory can search and filter locally.
       const result = await patientApi.list({
-        skip: 0,
-        limit: 100,
-        active_only: false,
+        page: 1,
+        page_size: 100,
+        active: null,
       });
 
-      setPatients(result);
+      setPatients(result.items);
+      setPage(1);
     } catch (err) {
+      setPatients([]);
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -154,14 +159,11 @@ export default function PatientsPage() {
     });
   }, [patients, search, statusFilter]);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredPatients.length / PAGE_SIZE),
-  );
+  const totalPages = Math.max(1, Math.ceil(filteredPatients.length / pageSize));
 
   const visiblePatients = filteredPatients.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE,
+    (page - 1) * pageSize,
+    page * pageSize,
   );
 
   const activeCount = patients.filter((patient) => patient.active).length;
@@ -285,7 +287,6 @@ export default function PatientsPage() {
       {/* Page heading */}
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-
           <h1 className="text-2xl font-bold tracking-tight text-[#063f3c] sm:text-3xl">
             Patients
           </h1>
@@ -404,7 +405,7 @@ export default function PatientsPage() {
         <section className="overflow-hidden rounded-xl border border-[#dce9e8] bg-white shadow-sm">
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[850px] border-collapse text-left">
+            <table className="w-full min-w-212.5 border-collapse text-left">
               <thead>
                 <tr className="bg-[#f7faf9] text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <th className="px-5 py-3 text-left">Patient ID</th>
@@ -611,53 +612,18 @@ export default function PatientsPage() {
             </table>
           </div>
 
-          {/* Pagination */}
-          {!loading && filteredPatients.length > 0 && (
-            <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-2 sm:flex-row sm:items-center sm:justify-between sm:px-6 bg-[#f7faf9] text-slate-500">
-              {/* Left: Page information */}
-              <p className="text-sm text-slate-500">
-                Page {page} of {totalPages}
-              </p>
-
-              {/* Center: Results count */}
-              <p className="text-xs text-slate-500">
-                Showing{" "}
-                <strong className="font-semibold text-slate-700">
-                  {(page - 1) * PAGE_SIZE + 1}
-                  {"–"}
-                  {Math.min(page * PAGE_SIZE, filteredPatients.length)}
-                </strong>{" "}
-                of{" "}
-                <strong className="font-semibold text-slate-700">
-                  {filteredPatients.length}
-                </strong>{" "}
-                patients
-              </p>
-
-              {/* Right: Previous / Next */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={page <= 1}
-                  onClick={() => setPage((current) => current - 1)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <ArrowLeft size={15} />
-                  Previous
-                </button>
-
-                <button
-                  type="button"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((current) => current + 1)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Next
-                  <ArrowRight size={15} />
-                </button>
-              </div>
-            </div>
-          )}
+          <DataPagination
+            page={page}
+            pageSize={pageSize}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            totalItems={filteredPatients.length}
+            loading={loading}
+            onPageChange={(nextPage) => setPage(nextPage)}
+            onPageSizeChange={(nextPageSize) => {
+              setPageSize(nextPageSize);
+              setPage(1);
+            }}
+          />
         </section>
       </div>
 
@@ -995,39 +961,5 @@ function FormField({
       </span>
       {children}
     </label>
-  );
-}
-
-function SummaryCard({
-  title,
-  value,
-  description,
-  icon,
-  iconClass,
-}: {
-  title: string;
-  value: string;
-  description: string;
-  icon: React.ReactNode;
-  iconClass: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-[#dce9e8] bg-white p-5 shadow-sm transition hover:shadow-md sm:p-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{title}</p>
-          <p className="mt-3 text-3xl font-bold tracking-tight text-[#073f3c]">
-            {value}
-          </p>
-          <p className="mt-2 text-xs text-slate-500">{description}</p>
-        </div>
-
-        <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconClass}`}
-        >
-          {icon}
-        </div>
-      </div>
-    </div>
   );
 }
